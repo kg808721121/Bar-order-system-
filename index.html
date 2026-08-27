@@ -1,0 +1,820 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>夜光酒單</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Noto+Serif+TC:wght@500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#15120d;
+    --bg-surface:#201a13;
+    --bg-surface-2:#2a2318;
+    --bg-surface-3:#332a1c;
+    --line:#3d3423;
+    --line-soft:#2a2418;
+    --text:#f3e9d8;
+    --text-muted:#a99878;
+    --text-faint:#7a6c52;
+    --gold:#c9a445;
+    --gold-bright:#e8c56a;
+    --gold-dim:#7d6730;
+    --status-pending-bg:#3a2f15;
+    --status-pending-fg:#e0b84f;
+    --status-done-bg:#20301f;
+    --status-done-fg:#8fbf82;
+    --danger:#b0503f;
+    --danger-bright:#d1735f;
+    --shadow: 0 12px 32px rgba(0,0,0,.45);
+    --radius-lg:20px;
+    --radius-md:14px;
+    --radius-sm:9px;
+    --font-display:'Fraunces', 'Noto Serif TC', serif;
+    --font-body:'Work Sans', 'PingFang TC', 'Microsoft JhengHei', 'Heiti TC', sans-serif;
+    --font-mono:'Space Mono', 'Noto Sans Mono TC', monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    background-image:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(201,164,69,.09), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 0%, rgba(201,164,69,.06), transparent 55%);
+    background-attachment:fixed;
+  }
+  h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;margin:0;text-wrap:balance;}
+  p{margin:0;}
+  button{font-family:inherit;}
+  ::selection{background:var(--gold-dim);color:var(--text);}
+  :focus-visible{outline:2px solid var(--gold-bright);outline-offset:2px;}
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important;transition-duration:0.01ms !important;}
+  }
+
+  .screen{max-width:640px;margin:0 auto;padding:0 0 96px;min-height:100vh;position:relative;}
+  .screen.host{max-width:1080px;}
+
+  /* ---------- Guest header ---------- */
+  .g-hero{
+    padding:44px 20px 28px;
+    text-align:center;
+    border-bottom:1px solid var(--line-soft);
+    position:relative;
+  }
+  .g-hero .eyebrow{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--gold);
+    display:block;
+    margin-bottom:14px;
+  }
+  .g-hero h1{
+    font-size:clamp(30px,7vw,42px);
+    color:var(--text);
+    letter-spacing:.01em;
+  }
+  .g-hero .sub{
+    margin-top:10px;
+    color:var(--text-muted);
+    font-size:14.5px;
+  }
+
+  .g-name-bar{
+    margin:20px 20px 0;
+    background:var(--bg-surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius-md);
+    padding:14px 16px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .g-name-bar.greeting{justify-content:space-between;}
+  .g-name-bar input[type=text]{
+    flex:1;
+    background:transparent;
+    border:none;
+    color:var(--text);
+    font-size:16px;
+    font-family:var(--font-body);
+    padding:6px 2px;
+  }
+  .g-name-bar input[type=text]::placeholder{color:var(--text-faint);}
+  .g-name-bar .greet-name{
+    font-family:var(--font-display);
+    font-size:17px;
+    color:var(--gold-bright);
+  }
+  .btn{
+    appearance:none;border:1px solid var(--gold-dim);
+    background:linear-gradient(180deg, var(--gold), #b58f38);
+    color:#1a1409;
+    font-weight:700;
+    font-size:14px;
+    padding:11px 18px;
+    border-radius:999px;
+    cursor:pointer;
+    letter-spacing:.02em;
+    transition:filter .15s ease, transform .1s ease;
+    white-space:nowrap;
+  }
+  .btn:hover{filter:brightness(1.08);}
+  .btn:active{transform:scale(.97);}
+  .btn:disabled{opacity:.45;cursor:not-allowed;filter:none;}
+  .btn-ghost{
+    appearance:none;background:transparent;border:1px solid var(--line);
+    color:var(--text-muted);font-size:13px;padding:9px 14px;border-radius:999px;cursor:pointer;
+  }
+  .btn-ghost:hover{border-color:var(--gold-dim);color:var(--text);}
+  .btn-danger{background:linear-gradient(180deg, var(--danger-bright), var(--danger));color:#2a0e08;border-color:#7a3627;}
+  .btn-sm{padding:7px 13px;font-size:12.5px;}
+  .btn-block{width:100%;}
+
+  /* ---------- Menu ---------- */
+  .menu-list{padding:24px 20px 8px;display:flex;flex-direction:column;gap:14px;}
+  .drink-card{
+    background:var(--bg-surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius-lg);
+    padding:20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:16px;
+  }
+  .drink-info h3{font-size:19px;color:var(--text);letter-spacing:.01em;}
+  .drink-info .desc{margin-top:6px;color:var(--text-muted);font-size:13.5px;line-height:1.55;}
+  .drink-info .desc .dot{color:var(--gold-dim);margin:0 6px;}
+  .drink-order-btn{flex:0 0 auto;}
+
+  .empty-note{
+    margin:20px;padding:22px;text-align:center;color:var(--text-faint);
+    border:1px dashed var(--line);border-radius:var(--radius-md);font-size:13.5px;
+  }
+
+  /* ---------- My orders ---------- */
+  .my-orders{margin:6px 20px 0;}
+  .my-orders summary{
+    cursor:pointer;color:var(--text-muted);font-size:13px;font-family:var(--font-mono);
+    padding:14px 4px;list-style:none;display:flex;align-items:center;gap:8px;
+  }
+  .my-orders summary::-webkit-details-marker{display:none;}
+  .my-orders summary::before{content:'▸';color:var(--gold);transition:transform .15s;}
+  .my-orders[open] summary::before{transform:rotate(90deg);}
+  .ticket-row{
+    display:flex;align-items:center;gap:12px;
+    padding:12px 14px;background:var(--bg-surface);border:1px solid var(--line-soft);
+    border-radius:var(--radius-sm);margin-bottom:8px;
+  }
+  .ticket-num{font-family:var(--font-mono);color:var(--gold);font-size:13px;min-width:34px;}
+  .ticket-main{flex:1;min-width:0;}
+  .ticket-main .name{font-size:14.5px;color:var(--text);}
+  .ticket-main .drink{font-size:12.5px;color:var(--text-muted);margin-top:2px;}
+  .pill{
+    font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;padding:5px 10px;border-radius:999px;
+    white-space:nowrap;
+  }
+  .pill.pending{background:var(--status-pending-bg);color:var(--status-pending-fg);}
+  .pill.done{background:var(--status-done-bg);color:var(--status-done-fg);}
+
+  /* ---------- Host trigger + footer ---------- */
+  .host-fab{
+    position:fixed;right:16px;bottom:16px;
+    width:46px;height:46px;border-radius:50%;
+    background:var(--bg-surface-2);border:1px solid var(--line);
+    color:var(--text-faint);font-size:18px;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    box-shadow:var(--shadow);
+    z-index:40;
+  }
+  .host-fab:hover{color:var(--gold);border-color:var(--gold-dim);}
+
+  .footer-note{text-align:center;color:var(--text-faint);font-size:11.5px;padding:26px 20px 0;font-family:var(--font-mono);}
+
+  /* ---------- Modal / PIN pad ---------- */
+  .modal-backdrop{
+    position:fixed;inset:0;background:rgba(10,8,5,.72);backdrop-filter:blur(3px);
+    display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;
+  }
+  .modal{
+    background:var(--bg-surface);border:1px solid var(--line);border-radius:var(--radius-lg);
+    padding:28px 24px 24px;max-width:340px;width:100%;box-shadow:var(--shadow);
+  }
+  .modal h2{font-size:20px;text-align:center;color:var(--text);}
+  .modal .modal-sub{text-align:center;color:var(--text-muted);font-size:13px;margin-top:6px;}
+  .pin-dots{display:flex;justify-content:center;gap:14px;margin:22px 0;}
+  .pin-dot{width:14px;height:14px;border-radius:50%;border:1px solid var(--gold-dim);background:transparent;transition:background .1s;}
+  .pin-dot.filled{background:var(--gold);}
+  .pin-dot.err{background:var(--danger);border-color:var(--danger);}
+  .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .keypad button{
+    height:58px;border-radius:var(--radius-md);border:1px solid var(--line);
+    background:var(--bg-surface-2);color:var(--text);font-family:var(--font-mono);font-size:20px;cursor:pointer;
+  }
+  .keypad button:active{background:var(--bg-surface-3);}
+  .keypad button.wide{font-size:13px;color:var(--text-muted);}
+  .modal-close{display:block;margin:18px auto 0;background:none;border:none;color:var(--text-faint);font-size:13px;cursor:pointer;}
+
+  /* ---------- Toast ---------- */
+  #toast-root{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;align-items:center;width:100%;padding:0 16px;pointer-events:none;}
+  .toast{
+    background:var(--bg-surface-3);border:1px solid var(--gold-dim);color:var(--text);
+    padding:12px 20px;border-radius:999px;font-size:13.5px;box-shadow:var(--shadow);
+    animation:toast-in .18s ease-out;
+  }
+  .toast.err{border-color:var(--danger);}
+  @keyframes toast-in{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:none;}}
+
+  .banner{
+    margin:16px 20px 0;padding:12px 16px;border-radius:var(--radius-sm);
+    background:var(--status-pending-bg);color:var(--status-pending-fg);font-size:12.5px;text-align:center;
+    border:1px solid var(--gold-dim);
+  }
+  .banner.readonly{background:#2a2018;color:var(--text-muted);border-color:var(--line);}
+
+  /* ---------- Host dashboard ---------- */
+  .host-top{
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;
+    padding:26px 24px 18px;border-bottom:1px solid var(--line-soft);
+  }
+  .host-top h1{font-size:24px;}
+  .host-top .venue-tag{font-family:var(--font-mono);font-size:11px;color:var(--gold);letter-spacing:.15em;text-transform:uppercase;}
+  .stat-row{display:flex;gap:10px;padding:18px 24px 0;flex-wrap:wrap;}
+  .stat-tile{
+    background:var(--bg-surface);border:1px solid var(--line);border-radius:var(--radius-md);
+    padding:14px 20px;min-width:110px;flex:1;
+  }
+  .stat-tile .num{font-family:var(--font-mono);font-size:26px;color:var(--text);font-variant-numeric:tabular-nums;}
+  .stat-tile .lbl{font-size:11.5px;color:var(--text-muted);margin-top:2px;letter-spacing:.03em;}
+  .stat-tile.accent .num{color:var(--gold-bright);}
+
+  .tabs{display:flex;gap:6px;padding:18px 24px 0;flex-wrap:wrap;}
+  .tab-btn{
+    background:transparent;border:1px solid var(--line);color:var(--text-muted);
+    padding:9px 16px;border-radius:999px;font-size:13.5px;cursor:pointer;
+  }
+  .tab-btn.active{background:var(--bg-surface-2);border-color:var(--gold-dim);color:var(--gold-bright);}
+
+  .host-body{padding:20px 24px 60px;}
+
+  .queue-section h2{font-size:15px;color:var(--text-muted);letter-spacing:.05em;margin-bottom:12px;font-family:var(--font-mono);text-transform:uppercase;}
+  .queue-list{display:flex;flex-direction:column;gap:10px;margin-bottom:32px;}
+  .queue-row{
+    display:flex;align-items:center;gap:16px;background:var(--bg-surface);border:1px solid var(--line);
+    border-radius:var(--radius-md);padding:14px 18px;
+  }
+  .queue-row .tnum{font-family:var(--font-mono);color:var(--gold);font-size:15px;min-width:30px;}
+  .queue-row .qmain{flex:1;min-width:0;display:flex;flex-wrap:wrap;column-gap:14px;row-gap:2px;align-items:baseline;}
+  .queue-row .qname{font-family:var(--font-display);font-size:16.5px;}
+  .queue-row .qdrink{color:var(--text-muted);font-size:13.5px;}
+  .queue-row .qtime{font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);white-space:nowrap;}
+  .queue-row.done{opacity:.55;}
+  .queue-actions{display:flex;gap:8px;flex:0 0 auto;}
+
+  .menu-edit-row{
+    background:var(--bg-surface);border:1px solid var(--line);border-radius:var(--radius-md);
+    padding:16px;display:flex;gap:12px;margin-bottom:10px;align-items:flex-start;
+  }
+  .menu-edit-row .fields{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0;}
+  .field-label{font-size:10.5px;color:var(--text-faint);letter-spacing:.08em;text-transform:uppercase;font-family:var(--font-mono);}
+  .menu-edit-row input[type=text], .menu-edit-row textarea{
+    width:100%;background:var(--bg-surface-2);border:1px solid var(--line);border-radius:8px;
+    color:var(--text);padding:9px 11px;font-family:var(--font-body);font-size:14.5px;resize:vertical;
+  }
+  .menu-edit-row input[type=text]:focus, .menu-edit-row textarea:focus{border-color:var(--gold-dim);}
+
+  .qr-panel{display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start;}
+  .qr-box{
+    background:#fff;padding:16px;border-radius:var(--radius-md);flex:0 0 auto;
+    box-shadow:var(--shadow);
+  }
+  .qr-box img, .qr-box svg{display:block;width:220px;height:220px;shape-rendering:crispEdges;}
+  .qr-info{flex:1;min-width:240px;}
+  .qr-info h3{font-size:17px;margin-bottom:8px;}
+  .qr-info p{color:var(--text-muted);font-size:13.5px;line-height:1.7;margin-bottom:14px;}
+  .url-box{
+    display:flex;gap:8px;background:var(--bg-surface-2);border:1px solid var(--line);border-radius:10px;
+    padding:10px 12px;align-items:center;margin-bottom:14px;
+  }
+  .url-box code{flex:1;font-family:var(--font-mono);font-size:12.5px;color:var(--gold-bright);overflow-wrap:anywhere;}
+
+  .host-empty{color:var(--text-faint);font-size:13.5px;padding:18px 0;text-align:center;border:1px dashed var(--line);border-radius:var(--radius-md);}
+  .conn-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--status-done-fg);margin-right:6px;vertical-align:1px;}
+  .conn-dot.off{background:var(--danger-bright);}
+
+  @media (min-width: 720px){
+    .queue-columns{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;}
+  }
+</style>
+</head>
+<body>
+  <div id="toast-root"></div>
+  <div id="app"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script>
+  (function(){
+    "use strict";
+
+    /* =========================================================
+       CONFIG
+    ========================================================= */
+    var HOST_PIN = "1210";
+    var SITE_URL = "";     /* filled in after this page is deployed */
+    var QR_SVG = "";       /* filled in after QR is generated for SITE_URL */
+
+    var firebaseConfig = {
+      apiKey: "AIzaSyAaSF8ulbE-xbCN1k8b366TAtmrAXeo2W8",
+      authDomain: "cocktail-order-system-341b6.firebaseapp.com",
+      projectId: "cocktail-order-system-341b6",
+      storageBucket: "cocktail-order-system-341b6.firebasestorage.app",
+      messagingSenderId: "176424443116",
+      appId: "1:176424443116:web:36715a5b5938f8a5e819c9",
+      measurementId: "G-RKNDEJ1MKC"
+    };
+
+    var DEFAULT_MENU = [
+      {id:"m1", name:"Macha Gin & Tonic", desc:"抹茶、琴酒、通寧水"},
+      {id:"m2", name:"Jasmine Passion Mojito", desc:"茉莉綠茶、蘭姆酒、百香果、薄荷、氣泡水"},
+      {id:"m3", name:"Clear NewYork Sour", desc:"波本、酸、甜、紅酒、澄清"},
+      {id:"m4", name:"Ice Boat", desc:"高粱、艾碧斯、香草伏特加、橙汁、蜂蜜"},
+      {id:"m5", name:"Freud's Iceberg", desc:"琴酒、艾碧斯、椰子水、奶洗"},
+      {id:"m6", name:"Pavlov's Bell", desc:"龍舌蘭、梅子糖漿、話梅、味醂、鳳梨汁"}
+    ];
+
+    /* Firestore layout (all nested under the document "barOrderApp" so the
+       open security rule `match /barOrderApp/{document=**}` covers it):
+         barOrderApp/menu                 -> { items: [...] }
+         barOrderApp/orders/list/{id}     -> { guest, drinkId, drinkName, status, createdAt } */
+
+    /* =========================================================
+       RUNTIME STATE (in-memory)
+    ========================================================= */
+    var app = firebase.initializeApp(firebaseConfig);
+    var db = firebase.firestore();
+    var menuRef = db.collection("barOrderApp").doc("menu");
+    var ordersRef = db.collection("barOrderApp").doc("orders").collection("list");
+
+    var menu = DEFAULT_MENU;
+    var orders = [];
+    var connected = false;
+    var menuSeeded = false;
+
+    var role = sessionStorage.getItem("bar.role") || "guest"; /* guest | host */
+    var hostTab = sessionStorage.getItem("bar.hostTab") || "queue"; /* queue | edit | share */
+    var guestName = sessionStorage.getItem("bar.guestName") || "";
+    var myOrderIds = JSON.parse(sessionStorage.getItem("bar.myOrders") || "[]");
+    var pinBuffer = "";
+    var pinError = false;
+    var showPinModal = false;
+    var draftMenu = null; /* working copy while editing menu */
+
+    /* =========================================================
+       UTIL
+    ========================================================= */
+    function el(html){ var t=document.createElement("template"); t.innerHTML=html.trim(); return t.content.firstElementChild; }
+    function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+    function uid(prefix){ return prefix + Math.random().toString(36).slice(2,9); }
+    function clone(o){ return JSON.parse(JSON.stringify(o)); }
+    function timeAgo(ms){
+      var diffMs = Date.now() - ms;
+      var min = Math.floor(diffMs/60000);
+      if(min < 1) return "剛剛";
+      if(min < 60) return min+" 分鐘前";
+      var hr = Math.floor(min/60);
+      return hr+" 小時前";
+    }
+    function toast(msg, isErr){
+      var root = document.getElementById("toast-root");
+      var t = el('<div class="toast'+(isErr?" err":"")+'">'+esc(msg)+"</div>");
+      root.appendChild(t);
+      setTimeout(function(){ t.remove(); }, 3200);
+    }
+
+    /* =========================================================
+       FIRESTORE — LIVE LISTENERS
+    ========================================================= */
+    menuRef.onSnapshot(function(doc){
+      connected = true;
+      if(doc.exists && doc.data().items && doc.data().items.length){
+        menu = doc.data().items;
+      } else if(!menuSeeded){
+        menuSeeded = true;
+        menuRef.set({items: DEFAULT_MENU}).catch(function(){});
+        menu = DEFAULT_MENU;
+      }
+      render();
+    }, function(err){
+      connected = false;
+      render();
+      toast("連線失敗：" + (err && err.message ? err.message : "請檢查網路"), true);
+    });
+
+    ordersRef.orderBy("createdAt", "asc").onSnapshot(function(snap){
+      connected = true;
+      orders = snap.docs.map(function(d){
+        var v = d.data();
+        return {
+          id: d.id,
+          guest: v.guest,
+          drinkId: v.drinkId,
+          drinkName: v.drinkName,
+          status: v.status,
+          createdAt: v.createdAt || Date.now()
+        };
+      });
+      render();
+    }, function(err){
+      connected = false;
+      render();
+      toast("連線失敗：" + (err && err.message ? err.message : "請檢查網路"), true);
+    });
+
+    /* =========================================================
+       ACTIONS
+    ========================================================= */
+    function submitOrder(drinkId, drinkName){
+      if(!guestName || !guestName.trim()){
+        toast("請先輸入你的名字", true);
+        return;
+      }
+      var localId = uid("pending-");
+      myOrderIds.push(localId);
+      sessionStorage.setItem("bar.myOrders", JSON.stringify(myOrderIds));
+      toast("已送出「" + drinkName + "」🍸");
+      ordersRef.add({
+        guest: guestName.trim(),
+        drinkId: drinkId,
+        drinkName: drinkName,
+        status: "pending",
+        createdAt: Date.now()
+      }).then(function(docRef){
+        myOrderIds.push(docRef.id);
+        myOrderIds = myOrderIds.filter(function(id){ return id !== localId; });
+        sessionStorage.setItem("bar.myOrders", JSON.stringify(myOrderIds));
+        render();
+      }).catch(function(err){
+        toast("送出失敗：" + (err && err.message ? err.message : "請再試一次"), true);
+      });
+    }
+
+    function toggleOrder(orderId){
+      var order = orders.find(function(o){ return o.id === orderId; });
+      if(!order) return;
+      var next = order.status === "pending" ? "done" : "pending";
+      ordersRef.doc(orderId).update({status: next}).catch(function(err){
+        toast("更新失敗：" + (err && err.message ? err.message : "請再試一次"), true);
+      });
+    }
+
+    function resetOrders(){
+      if(!confirm("確定要清空目前所有點單嗎？酒單本身不會被清除。")) return;
+      ordersRef.get().then(function(snap){
+        var batch = db.batch();
+        snap.docs.forEach(function(d){ batch.delete(d.ref); });
+        return batch.commit();
+      }).then(function(){
+        toast("已清空本場點單，可以開始新的一場了");
+      }).catch(function(err){
+        toast("清空失敗：" + (err && err.message ? err.message : "請再試一次"), true);
+      });
+    }
+
+    function cancelEditMenu(){
+      draftMenu = null;
+      render();
+    }
+    function draftAddItem(){
+      draftMenu.push({id: uid("m"), name:"", desc:""});
+      render();
+    }
+    function draftRemoveItem(id){
+      draftMenu = draftMenu.filter(function(m){ return m.id !== id; });
+      render();
+    }
+    function saveMenu(){
+      var rows = document.querySelectorAll(".menu-edit-row");
+      var newMenu = [];
+      rows.forEach(function(row){
+        var id = row.getAttribute("data-id");
+        var name = row.querySelector(".m-name").value.trim();
+        var desc = row.querySelector(".m-desc").value.trim();
+        if(name) newMenu.push({id:id, name:name, desc:desc});
+      });
+      if(newMenu.length === 0){
+        toast("酒單至少要有一款酒喔", true);
+        return;
+      }
+      menuRef.set({items: newMenu}).then(function(){
+        draftMenu = null;
+        toast("酒單已更新");
+        render();
+      }).catch(function(err){
+        toast("儲存失敗：" + (err && err.message ? err.message : "請再試一次"), true);
+      });
+    }
+
+    function setRole(r){
+      role = r;
+      sessionStorage.setItem("bar.role", r);
+      render();
+    }
+    function setHostTab(t){
+      hostTab = t;
+      sessionStorage.setItem("bar.hostTab", t);
+      render();
+    }
+
+    function pinPress(d){
+      if(pinBuffer.length >= 4) return;
+      pinBuffer += d;
+      pinError = false;
+      if(pinBuffer.length === 4){
+        if(pinBuffer === HOST_PIN){
+          showPinModal = false;
+          pinBuffer = "";
+          setRole("host");
+        } else {
+          pinError = true;
+          render();
+          setTimeout(function(){ pinBuffer=""; pinError=false; render(); }, 500);
+        }
+        return;
+      }
+      render();
+    }
+    function pinBackspace(){
+      pinBuffer = pinBuffer.slice(0, -1);
+      pinError = false;
+      render();
+    }
+    function openPinModal(){ showPinModal = true; pinBuffer=""; pinError=false; render(); }
+    function closePinModal(){ showPinModal = false; render(); }
+    function logoutHost(){ setRole("guest"); }
+
+    /* =========================================================
+       RENDER — GUEST VIEW
+    ========================================================= */
+    function renderGuestView(){
+      var hasName = !!(guestName && guestName.trim());
+      var nameBarHtml = hasName
+        ? '<div class="g-name-bar greeting">'
+          + '<span>👋 &nbsp;<span class="greet-name">' + esc(guestName) + "</span></span>"
+          + '<button class="btn-ghost btn-sm" data-action="edit-name">換人</button>'
+          + "</div>"
+        : '<form class="g-name-bar" data-action-submit="save-name">'
+          + '<input type="text" id="name-input" placeholder="輸入你的名字…" maxlength="20" autocomplete="off">'
+          + '<button class="btn btn-sm" type="submit">開始點酒</button>'
+          + "</form>";
+
+      var connBanner = !connected ? '<div class="banner readonly">⚠️ 連線中，請稍候…如果一直卡住請檢查網路連線</div>' : "";
+
+      var cards = menu.map(function(m){
+        return '<div class="drink-card">'
+          + '<div class="drink-info"><h3>' + esc(m.name) + "</h3>"
+          + '<p class="desc">' + esc(m.desc) + "</p></div>"
+          + '<button class="btn drink-order-btn" data-action="order" data-id="' + esc(m.id) + '" data-name="' + esc(m.name) + '" ' + (hasName && connected ? "" : "disabled") + ">點這杯</button>"
+          + "</div>";
+      }).join("");
+
+      var myTickets = orders.filter(function(o){ return myOrderIds.indexOf(o.id) !== -1; })
+        .sort(function(a,b){ return b.createdAt - a.createdAt; });
+      var myOrdersHtml = "";
+      if(myTickets.length){
+        myOrdersHtml = '<details class="my-orders" open><summary>我的點單（' + myTickets.length + '）</summary>'
+          + myTickets.map(function(o){
+            return '<div class="ticket-row"><span class="ticket-num">#' + ticketNumOf(o.id) + '</span>'
+              + '<div class="ticket-main"><div class="name">' + esc(o.drinkName) + '</div>'
+              + '<div class="drink">' + timeAgo(o.createdAt) + '</div></div>'
+              + '<span class="pill ' + o.status + '">' + (o.status === "done" ? "已完成" : "製作中") + '</span></div>';
+          }).join("")
+          + "</details>";
+      }
+
+      return '<div class="screen">'
+        + '<div class="g-hero"><span class="eyebrow">Tonight\'s Menu</span><h1>夜光酒單</h1>'
+        + '<p class="sub">掃碼即點，選好酒款、送出，調酒師會為你手作一杯</p></div>'
+        + connBanner
+        + nameBarHtml
+        + '<div class="menu-list">' + (cards || '<div class="empty-note">酒單準備中，稍後再回來看看</div>') + "</div>"
+        + '<div style="padding:0 20px;">' + myOrdersHtml + "</div>"
+        + '<p class="footer-note">BESPOKE BAR SYSTEM · 私人調酒點單</p>'
+        + '<div class="host-fab" data-action="open-host" title="後台">🔐</div>'
+        + "</div>"
+        + renderPinModal();
+    }
+
+    /* stable ticket number = 1-based position in the full, time-ordered order list */
+    function ticketNumOf(orderId){
+      for(var i=0;i<orders.length;i++){ if(orders[i].id === orderId) return i+1; }
+      return "?";
+    }
+
+    /* =========================================================
+       RENDER — PIN MODAL
+    ========================================================= */
+    function renderPinModal(){
+      if(!showPinModal) return "";
+      var dots = "";
+      for(var i=0;i<4;i++){
+        var cls = "pin-dot" + (i < pinBuffer.length ? " filled" : "") + (pinError ? " err" : "");
+        dots += '<div class="' + cls + '"></div>';
+      }
+      var keys = [1,2,3,4,5,6,7,8,9];
+      var keypadHtml = keys.map(function(k){ return '<button data-action="pin-press" data-digit="'+k+'">'+k+'</button>'; }).join("")
+        + '<button class="wide" data-action="pin-cancel">取消</button>'
+        + '<button data-action="pin-press" data-digit="0">0</button>'
+        + '<button class="wide" data-action="pin-back">⌫</button>';
+      return '<div class="modal-backdrop">'
+        + '<div class="modal">'
+        + '<h2>後台通關碼</h2><p class="modal-sub">輸入 4 位數 PIN 進入出杯看板</p>'
+        + '<div class="pin-dots">' + dots + "</div>"
+        + '<div class="keypad">' + keypadHtml + "</div>"
+        + '<button class="modal-close" data-action="pin-cancel">返回酒單</button>'
+        + "</div></div>";
+    }
+
+    /* =========================================================
+       RENDER — HOST VIEW
+    ========================================================= */
+    function renderHostView(){
+      var pending = orders.filter(function(o){ return o.status === "pending"; });
+      var done = orders.filter(function(o){ return o.status === "done"; }).slice().reverse();
+
+      var connDot = '<span class="conn-dot' + (connected?"":" off") + '"></span>' + (connected ? "即時同步中" : "連線中斷");
+
+      var top = '<div class="host-top"><div><span class="venue-tag">' + connDot + '</span><h1>出杯看板</h1></div>'
+        + '<div style="display:flex;gap:8px;"><button class="btn-ghost btn-sm" data-action="reset-orders">重置點單</button>'
+        + '<button class="btn-ghost btn-sm" data-action="logout-host">登出</button></div></div>';
+
+      var stats = '<div class="stat-row">'
+        + '<div class="stat-tile accent"><div class="num">' + pending.length + '</div><div class="lbl">等待製作</div></div>'
+        + '<div class="stat-tile"><div class="num">' + done.length + '</div><div class="lbl">已完成</div></div>'
+        + '<div class="stat-tile"><div class="num">' + orders.length + '</div><div class="lbl">今晚總點杯數</div></div>'
+        + '<div class="stat-tile"><div class="num">' + menu.length + '</div><div class="lbl">酒單款數</div></div>'
+        + "</div>";
+
+      var tabs = '<div class="tabs">'
+        + tabBtn("queue","出杯看板") + tabBtn("edit","編輯酒單") + tabBtn("share","分享 QR Code")
+        + "</div>";
+
+      var body = "";
+      if(hostTab === "queue") body = renderQueueTab(pending, done);
+      else if(hostTab === "edit") body = renderEditTab();
+      else body = renderShareTab();
+
+      return '<div class="screen host">' + top + stats + tabs + '<div class="host-body">' + body + "</div></div>";
+    }
+
+    function tabBtn(key, label){
+      return '<button class="tab-btn' + (hostTab===key?" active":"") + '" data-action="host-tab" data-tab="' + key + '">' + label + "</button>";
+    }
+
+    function renderQueueTab(pending, done){
+      function row(o, isDone){
+        return '<div class="queue-row' + (isDone?" done":"") + '">'
+          + '<span class="tnum">#' + ticketNumOf(o.id) + '</span>'
+          + '<div class="qmain"><span class="qname">' + esc(o.guest) + '</span><span class="qdrink">' + esc(o.drinkName) + '</span>'
+          + '<span class="qtime">' + timeAgo(o.createdAt) + '</span></div>'
+          + '<div class="queue-actions"><button class="btn btn-sm" data-action="toggle-order" data-id="' + o.id + '">' + (isDone ? "復原" : "完成 ✓") + '</button></div>'
+          + "</div>";
+      }
+      var pendingHtml = pending.length ? pending.map(function(o){ return row(o,false); }).join("") : '<div class="host-empty">目前沒有等待中的點單</div>';
+      var doneHtml = done.length ? done.map(function(o){ return row(o,true); }).join("") : '<div class="host-empty">還沒有完成的點單</div>';
+      return '<div class="queue-columns">'
+        + '<div class="queue-section"><h2>等待製作 · ' + pending.length + '</h2><div class="queue-list">' + pendingHtml + "</div></div>"
+        + '<div class="queue-section"><h2>已完成 · ' + done.length + '</h2><div class="queue-list">' + doneHtml + "</div></div>"
+        + "</div>";
+    }
+
+    function renderEditTab(){
+      var items = draftMenu || clone(menu);
+      if(!draftMenu) draftMenu = items;
+      var rowsHtml = items.map(function(m){
+        return '<div class="menu-edit-row" data-id="' + esc(m.id) + '">'
+          + '<div class="fields">'
+          + '<span class="field-label">酒名</span><input type="text" class="m-name" value="' + esc(m.name) + '" placeholder="例如 Macha Gin & Tonic">'
+          + '<span class="field-label">成分 / 說明</span><textarea class="m-desc" rows="2" placeholder="例如 抹茶、琴酒、通寧水">' + esc(m.desc) + "</textarea>"
+          + "</div>"
+          + '<button class="btn-ghost btn-sm" data-action="draft-remove" data-id="' + esc(m.id) + '">刪除</button>'
+          + "</div>";
+      }).join("");
+      return '<div>' + rowsHtml
+        + '<button class="btn-ghost btn-block" style="margin-bottom:20px;" data-action="draft-add">＋ 新增酒款</button>'
+        + '<div style="display:flex;gap:10px;"><button class="btn" data-action="save-menu">儲存變更</button>'
+        + '<button class="btn-ghost" data-action="cancel-edit-menu">取消</button></div>'
+        + "</div>";
+    }
+
+    function renderShareTab(){
+      var qrHtml = QR_SVG
+        ? '<div class="qr-box">' + QR_SVG + '</div>'
+        : '<div class="qr-box" style="width:220px;height:220px;display:flex;align-items:center;justify-content:center;color:#999;font-size:13px;">QR Code 產生中</div>';
+      var urlText = SITE_URL || "（部署後這裡會顯示網址）";
+      return '<div class="qr-panel">' + qrHtml
+        + '<div class="qr-info"><h3>把這個 QR Code 印出來或投影出來</h3>'
+        + '<p>客人掃描後會直接打開點酒頁面，不需要安裝任何 App、不需要登入任何帳號，也不需要跟你連同一個 Wi-Fi — 只要有網路就能點酒，帶去任何地方都能用。</p>'
+        + '<div class="url-box"><code>' + esc(urlText) + '</code></div>'
+        + '<p>下次辦活動前，先按上方「重置點單」清空點單紀錄，酒單可以隨時在「編輯酒單」調整，QR Code 和網址不需要重新產生。</p>'
+        + "</div></div>";
+    }
+
+    /* =========================================================
+       MAIN RENDER
+    ========================================================= */
+    function render(){
+      var appEl = document.getElementById("app");
+      appEl.innerHTML = role === "host" ? renderHostView() : renderGuestView();
+    }
+
+    /* =========================================================
+       EVENT DELEGATION
+    ========================================================= */
+    document.addEventListener("click", function(e){
+      if(e.target.classList && e.target.classList.contains("modal-backdrop")){
+        closePinModal();
+        return;
+      }
+      var t = e.target.closest("[data-action]");
+      if(!t) return;
+      var action = t.getAttribute("data-action");
+      switch(action){
+        case "order":
+          submitOrder(t.getAttribute("data-id"), t.getAttribute("data-name"));
+          break;
+        case "edit-name":
+          guestName = "";
+          sessionStorage.removeItem("bar.guestName");
+          render();
+          break;
+        case "open-host":
+          openPinModal();
+          break;
+        case "pin-cancel":
+          closePinModal();
+          break;
+        case "pin-back":
+          pinBackspace();
+          break;
+        case "pin-press":
+          pinPress(t.getAttribute("data-digit"));
+          break;
+        case "logout-host":
+          logoutHost();
+          break;
+        case "reset-orders":
+          resetOrders();
+          break;
+        case "host-tab":
+          setHostTab(t.getAttribute("data-tab"));
+          break;
+        case "draft-add":
+          draftAddItem();
+          break;
+        case "draft-remove":
+          draftRemoveItem(t.getAttribute("data-id"));
+          break;
+        case "save-menu":
+          saveMenu();
+          break;
+        case "cancel-edit-menu":
+          cancelEditMenu();
+          break;
+        case "toggle-order":
+          toggleOrder(t.getAttribute("data-id"));
+          break;
+      }
+    });
+
+    document.addEventListener("submit", function(e){
+      var t = e.target.closest("[data-action-submit]");
+      if(!t) return;
+      e.preventDefault();
+      var action = t.getAttribute("data-action-submit");
+      if(action === "save-name"){
+        var v = document.getElementById("name-input").value.trim();
+        if(!v) return;
+        guestName = v;
+        sessionStorage.setItem("bar.guestName", v);
+        render();
+      }
+    });
+
+    /* =========================================================
+       INIT
+    ========================================================= */
+    render();
+  })();
+  </script>
+</body>
+</html>
