@@ -9,28 +9,28 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Noto+Serif+TC:wght@500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#050505;
-    --bg-surface:#121110;
-    --bg-surface-2:#1c1a17;
-    --bg-surface-3:#272420;
-    --line:#3a331f;
-    --line-soft:#221f16;
-    --text:#f5efdc;
-    --text-muted:#b3a67e;
-    --text-faint:#7d7355;
-    --gold:#b8912c;
-    --gold-bright:#e8c15f;
-    --gold-dim:#6e5420;
-    --status-pending-bg:#332a10;
-    --status-pending-fg:#e8c04a;
-    --status-done-bg:#14261a;
-    --status-done-fg:#82c98d;
+    --bg:#0a0908;
+    --bg-surface:#131210;
+    --bg-surface-2:#1c1a16;
+    --bg-surface-3:#262420;
+    --line:#3c372c;
+    --line-soft:#201d17;
+    --text:#f2ecdc;
+    --text-muted:#a89c7f;
+    --text-faint:#6c6250;
+    --gold:#cabd98;
+    --gold-bright:#f0e6cc;
+    --gold-dim:#564f3c;
+    --status-pending-bg:#2b2818;
+    --status-pending-fg:#e3d6a6;
+    --status-done-bg:#15231a;
+    --status-done-fg:#89c091;
     --danger:#a13f3f;
     --danger-bright:#c96060;
     --shadow: 0 12px 36px rgba(0,0,0,.6);
-    --radius-lg:20px;
-    --radius-md:14px;
-    --radius-sm:9px;
+    --radius-lg:16px;
+    --radius-md:12px;
+    --radius-sm:8px;
     --font-display:'Fraunces', 'Noto Serif TC', serif;
     --font-body:'Work Sans', 'PingFang TC', 'Microsoft JhengHei', 'Heiti TC', sans-serif;
     --font-mono:'Space Mono', 'Noto Sans Mono TC', monospace;
@@ -45,8 +45,9 @@
     -webkit-font-smoothing:antialiased;
     min-height:100vh;
     background-image:
-      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(184,145,44,.13), transparent 60%),
-      radial-gradient(ellipse 700px 500px at 100% 0%, rgba(184,145,44,.09), transparent 55%);
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(245,238,220,.05), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 0%, rgba(245,238,220,.03), transparent 55%),
+      radial-gradient(ellipse 1200px 800px at 50% 100%, rgba(0,0,0,.4), transparent 60%);
     background-attachment:fixed;
   }
   h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;margin:0;text-wrap:balance;}
@@ -61,35 +62,47 @@
   .screen{max-width:640px;margin:0 auto;padding:0 0 96px;min-height:100vh;position:relative;}
   .screen.host{max-width:1080px;}
 
+  @media (min-width:720px){
+    .screen{
+      border:1px solid var(--line-soft);
+      border-radius:2px;
+      margin-top:32px;margin-bottom:32px;
+      box-shadow:0 40px 100px rgba(0,0,0,.55);
+      background:linear-gradient(180deg, rgba(255,255,255,.015), transparent 220px);
+    }
+  }
+
   /* ---------- Guest header ---------- */
   .g-hero{
-    padding:44px 20px 28px;
+    padding:48px 20px 30px;
     text-align:center;
     border-bottom:1px solid var(--line-soft);
     position:relative;
   }
   .g-hero .eyebrow{
     font-family:var(--font-mono);
-    font-size:11px;
-    letter-spacing:.22em;
+    font-size:10.5px;
+    letter-spacing:.26em;
     text-transform:uppercase;
-    color:var(--gold);
+    color:var(--text-faint);
     display:block;
-    margin-bottom:14px;
+    margin-bottom:16px;
   }
   .g-hero h1{
     font-size:clamp(24px,6.2vw,36px);
     color:var(--gold-bright);
-    letter-spacing:.03em;
-    line-height:1.2;
+    letter-spacing:.14em;
+    line-height:1.25;
+    text-transform:uppercase;
   }
   .g-hero .sub{
-    margin-top:12px;
+    margin-top:14px;
     color:var(--text-muted);
-    font-size:14.5px;
+    font-size:13.5px;
     font-style:italic;
-    letter-spacing:.01em;
+    letter-spacing:.02em;
   }
+  .g-hero .sub::before,.g-hero .sub::after{content:'—';margin:0 10px;color:var(--line);font-style:normal;}
 
   .g-name-bar{
     margin:20px 20px 0;
@@ -118,15 +131,16 @@
     color:var(--gold-bright);
   }
   .btn{
-    appearance:none;border:1px solid var(--gold-dim);
-    background:linear-gradient(180deg, var(--gold-bright), var(--gold) 55%, #8a6a20);
-    color:#1a1409;
+    appearance:none;border:1px solid var(--gold-bright);
+    background:var(--gold-bright);
+    color:#15120c;
     font-weight:700;
-    font-size:14px;
+    font-size:13.5px;
     padding:11px 18px;
-    border-radius:999px;
+    border-radius:3px;
     cursor:pointer;
-    letter-spacing:.02em;
+    letter-spacing:.08em;
+    text-transform:uppercase;
     transition:filter .15s ease, transform .1s ease;
     white-space:nowrap;
   }
@@ -147,15 +161,16 @@
   .drink-card{
     background:var(--bg-surface);
     border:1px solid var(--line);
-    border-radius:var(--radius-lg);
+    border-left:2px solid var(--gold-dim);
+    border-radius:4px;
     padding:20px;
     display:flex;
     justify-content:space-between;
     align-items:center;
     gap:16px;
   }
-  .drink-info h3{font-size:19px;color:var(--text);letter-spacing:.01em;}
-  .drink-info .desc{margin-top:6px;color:var(--text-muted);font-size:13.5px;line-height:1.55;}
+  .drink-info h3{font-family:var(--font-display);font-size:19px;font-weight:600;color:var(--text);letter-spacing:.015em;}
+  .drink-info .desc{margin-top:8px;color:var(--text-muted);font-size:13px;line-height:1.6;font-family:var(--font-mono);letter-spacing:.01em;}
   .drink-info .desc .dot{color:var(--gold-dim);margin:0 6px;}
   .drink-order-btn{flex:0 0 auto;}
   .drink-actions{flex:0 0 auto;display:flex;flex-direction:column;gap:8px;align-items:stretch;}
@@ -599,6 +614,19 @@
       });
     }
 
+    function clearDoneOrders(){
+      if(!confirm("確定要清除「已完成」清單嗎？等待製作中的點單不會受影響。")) return;
+      ordersRef.where("status", "==", "done").get().then(function(snap){
+        var batch = db.batch();
+        snap.docs.forEach(function(d){ batch.delete(d.ref); });
+        return batch.commit();
+      }).then(function(){
+        toast("已清除出杯看板的完成紀錄");
+      }).catch(function(err){
+        toast("清除失敗：" + (err && err.message ? err.message : "請再試一次"), true);
+      });
+    }
+
     function resetRatings(){
       if(!confirm("確定要清空所有滿意度評分紀錄嗎？酒單和點單不會受影響。")) return;
       ratingsRef.get().then(function(snap){
@@ -741,7 +769,7 @@
       }
 
       return '<div class="screen">'
-        + '<div class="g-hero"><span class="eyebrow">Mike &amp; Eva\'s House · Saturday, September 5</span>'
+        + '<div class="g-hero"><span class="eyebrow">Dk &amp; Jean\'s House · Saturday, October 31</span>'
         + '<h1>THE ALTERED STATE</h1>'
         + '<p class="sub">A Study of Psychology, Tea &amp; Molecules</p></div>'
         + connBanner
@@ -838,9 +866,13 @@
       }
       var pendingHtml = pending.length ? pending.map(function(o){ return row(o,false); }).join("") : '<div class="host-empty">目前沒有等待中的點單</div>';
       var doneHtml = done.length ? done.map(function(o){ return row(o,true); }).join("") : '<div class="host-empty">還沒有完成的點單</div>';
+      var doneHeader = '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">'
+        + '<h2 style="margin-bottom:0;">已完成 · ' + done.length + '</h2>'
+        + '<button class="btn-ghost btn-sm" data-action="clear-done-orders"' + (done.length ? "" : " disabled") + '>清除出杯看板</button>'
+        + "</div>";
       return '<div class="queue-columns">'
         + '<div class="queue-section"><h2>等待製作 · ' + pending.length + '</h2><div class="queue-list">' + pendingHtml + "</div></div>"
-        + '<div class="queue-section"><h2>已完成 · ' + done.length + '</h2><div class="queue-list">' + doneHtml + "</div></div>"
+        + '<div class="queue-section">' + doneHeader + '<div class="queue-list">' + doneHtml + "</div></div>"
         + "</div>";
     }
 
@@ -1063,6 +1095,9 @@
           break;
         case "reset-ratings":
           resetRatings();
+          break;
+        case "clear-done-orders":
+          clearDoneOrders();
           break;
         case "reset-timing":
           resetTiming();
