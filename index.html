@@ -403,7 +403,8 @@
        open security rule `match /barOrderApp/{document=**}` covers it):
          barOrderApp/menu                 -> { items: [...] }
          barOrderApp/orders/list/{id}     -> { guest, drinkId, drinkName, status, createdAt }
-         barOrderApp/ratings/list/{id}    -> { drinkId, drinkName, stars, createdAt } */
+         barOrderApp/ratings/list/{id}    -> { drinkId, drinkName, stars, createdAt }
+         barOrderApp/settings             -> { timingResetAt }  (製作時間統計只計算這個時間之後完成的杯數) */
 
     /* =========================================================
        RUNTIME STATE (in-memory)
@@ -413,10 +414,12 @@
     var menuRef = db.collection("barOrderApp").doc("menu");
     var ordersRef = db.collection("barOrderApp").doc("orders").collection("list");
     var ratingsRef = db.collection("barOrderApp").doc("ratings").collection("list");
+    var settingsRef = db.collection("barOrderApp").doc("settings");
 
     var menu = DEFAULT_MENU;
     var orders = [];
     var ratings = [];
+    var timingResetAt = 0;
     var connected = false;
     var menuSeeded = false;
 
@@ -490,6 +493,11 @@
       render();
       toast("連線失敗：" + (err && err.message ? err.message : "請檢查網路"), true);
     });
+
+    settingsRef.onSnapshot(function(doc){
+      timingResetAt = (doc.exists && doc.data().timingResetAt) || 0;
+      render();
+    }, function(){});
 
     ratingsRef.orderBy("createdAt", "asc").onSnapshot(function(snap){
       connected = true;
@@ -601,6 +609,15 @@
         toast("已清空滿意度評分紀錄，可以開始新的一場了");
       }).catch(function(err){
         toast("清空失敗：" + (err && err.message ? err.message : "請再試一次"), true);
+      });
+    }
+
+    function resetTiming(){
+      if(!confirm("確定要清除製作時間統計嗎？點單、酒單和滿意度評分都不會受影響。")) return;
+      settingsRef.set({ timingResetAt: Date.now() }, { merge: true }).then(function(){
+        toast("已清除製作時間統計，接下來完成的杯數會重新計算");
+      }).catch(function(err){
+        toast("清除失敗：" + (err && err.message ? err.message : "請再試一次"), true);
       });
     }
 
@@ -900,9 +917,13 @@
     }
 
     function renderTimingTab(){
-      var doneOrders = orders.filter(function(o){ return o.status === "done" && o.doneAt; });
+      var doneOrders = orders.filter(function(o){ return o.status === "done" && o.doneAt && o.doneAt > timingResetAt; });
+      var header = '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">'
+        + '<h2 style="margin-bottom:0;">製作時間統計 · 共 ' + doneOrders.length + ' 杯</h2>'
+        + '<button class="btn-ghost btn-sm" data-action="reset-timing"' + (doneOrders.length ? "" : " disabled") + '>清除製作時間統計</button>'
+        + "</div>";
       if(!doneOrders.length){
-        return '<div class="host-empty">還沒有完成任何一杯調酒，等第一杯做完就會開始統計製作時間</div>';
+        return '<div class="queue-section">' + header + '<div class="host-empty">還沒有完成任何一杯調酒，等第一杯做完就會開始統計製作時間</div></div>';
       }
 
       var durations = doneOrders.map(function(o){ return {order:o, ms: Math.max(0, o.doneAt - o.createdAt)}; });
@@ -978,7 +999,7 @@
 
       var perDrinkSection = '<div class="queue-section"><h2>每杯調酒製作時間分析</h2><div class="rating-list">' + perDrinkHtml + "</div></div>";
 
-      return tenderStats + leaderboards + perDrinkSection;
+      return '<div class="queue-section">' + header + "</div>" + tenderStats + leaderboards + perDrinkSection;
     }
 
     function renderShareTab(){
@@ -1042,6 +1063,9 @@
           break;
         case "reset-ratings":
           resetRatings();
+          break;
+        case "reset-timing":
+          resetTiming();
           break;
         case "host-tab":
           setHostTab(t.getAttribute("data-tab"));
