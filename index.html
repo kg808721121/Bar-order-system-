@@ -219,6 +219,19 @@
   }
   .pill.pending{background:var(--status-pending-bg);color:var(--status-pending-fg);}
   .pill.done{background:var(--status-done-bg);color:var(--status-done-fg);}
+  .pill.cancelled{background:transparent;color:var(--danger-bright);border:1px solid var(--danger);}
+  .drink-card.sold-out{opacity:.55;}
+  .drink-card.sold-out h3::after{content:"已完售";margin-left:10px;font-size:11px;letter-spacing:.08em;padding:3px 8px;border-radius:999px;border:1px solid var(--danger);color:var(--danger-bright);vertical-align:middle;font-family:var(--font-body);}
+  .btn-cancel{border-color:var(--danger);color:var(--danger-bright);}
+  .btn-cancel:hover{border-color:var(--danger-bright);color:var(--danger-bright);}
+  .queue-row.cancelled{opacity:.5;}
+  .queue-row.cancelled .qdrink{text-decoration:line-through;}
+  .soldout-tag{font-size:11px;padding:2px 7px;border-radius:999px;border:1px solid var(--danger);color:var(--danger-bright);white-space:nowrap;}
+  .supply-strip{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:22px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--radius-md);}
+  .supply-strip .supply-label{font-size:12.5px;color:var(--text-muted);margin-right:4px;}
+  .supply-chip{appearance:none;background:transparent;border:1px solid var(--line);color:var(--text);font-family:inherit;font-size:12.5px;padding:7px 12px;border-radius:999px;cursor:pointer;}
+  .supply-chip:hover{border-color:var(--gold-dim);}
+  .supply-chip.off{border-color:var(--danger);color:var(--danger-bright);text-decoration:line-through;}
 
   /* ---------- Host trigger + footer ---------- */
   .host-fab{
@@ -419,7 +432,9 @@
          barOrderApp/menu                 -> { items: [...] }
          barOrderApp/orders/list/{id}     -> { guest, drinkId, drinkName, status, createdAt }
          barOrderApp/ratings/list/{id}    -> { drinkId, drinkName, stars, createdAt }
-         barOrderApp/settings             -> { timingResetAt }  (製作時間統計只計算這個時間之後完成的杯數) */
+         barOrderApp/settings             -> { timingResetAt, soldOut: { <drinkId>: true } }
+           (製作時間統計只計算 timingResetAt 之後完成的杯數；soldOut 記錄完售的酒款，前台會停止接單)
+         點單 status：pending（等待製作）/ done（已完成）/ cancelled（已取消） */
 
     /* =========================================================
        RUNTIME STATE (in-memory)
@@ -435,6 +450,7 @@
     var orders = [];
     var ratings = [];
     var timingResetAt = 0;
+    var soldOut = {};
     var connected = false;
     var menuSeeded = false;
 
@@ -511,6 +527,7 @@
 
     settingsRef.onSnapshot(function(doc){
       timingResetAt = (doc.exists && doc.data().timingResetAt) || 0;
+      soldOut = (doc.exists && doc.data().soldOut) || {};
       render();
     }, function(){});
 
@@ -536,7 +553,13 @@
     /* =========================================================
        ACTIONS
     ========================================================= */
+    function isSoldOut(drinkId){ return !!soldOut[drinkId]; }
+
     function submitOrder(drinkId, drinkName){
+      if(isSoldOut(drinkId)){
+        toast("「" + drinkName + "」已經完售了，換一杯試試吧", true);
+        return;
+      }
       if(!guestName || !guestName.trim()){
         toast("請先輸入你的名字", true);
         return;
@@ -592,6 +615,40 @@
       });
     }
 
+    function cancelOrder(orderId){
+      var order = orders.find(function(o){ return o.id === orderId; });
+      if(!order) return;
+      if(!confirm("確定要取消 " + order.guest + " 的「" + order.drinkName + "」嗎？客人會看到這張點單已取消。")) return;
+      ordersRef.doc(orderId).update({ status: "cancelled", cancelledAt: Date.now() }).then(function(){
+        toast("已取消 " + order.guest + " 的「" + order.drinkName + "」");
+      }).catch(function(err){
+        toast("取消失敗：" + (err && err.message ? err.message : "請再試一次"), true);
+      });
+    }
+
+    function restoreOrder(orderId){
+      ordersRef.doc(orderId).update({ status: "pending", cancelledAt: firebase.firestore.FieldValue.delete() }).catch(function(err){
+        toast("復原失敗：" + (err && err.message ? err.message : "請再試一次"), true);
+      });
+    }
+
+    function setSoldOut(drinkId, value){
+      var item = menu.find(function(m){ return m.id === drinkId; });
+      var name = item ? item.name : "這杯酒";
+      if(value && !confirm("把「" + name + "」標記為完售嗎？客人將無法再點這杯。")) return;
+      var patch = {}; patch[drinkId] = value ? true : firebase.firestore.FieldValue.delete();
+      settingsRef.set({ soldOut: patch }, { merge: true }).then(function(){
+        if(value){
+          var waiting = orders.filter(function(o){ return o.status === "pending" && o.drinkId === drinkId; }).length;
+          toast("「" + name + "」已完售" + (waiting ? "，還有 " + waiting + " 張待製作的點單，記得決定要不要取消" : ""));
+        } else {
+          toast("「" + name + "」恢復供應了");
+        }
+      }).catch(function(err){
+        toast("更新失敗：" + (err && err.message ? err.message : "請再試一次"), true);
+      });
+    }
+
     function formatDuration(ms){
       var totalSec = Math.max(0, Math.round(ms / 1000));
       var min = Math.floor(totalSec / 60);
@@ -615,8 +672,8 @@
     }
 
     function clearDoneOrders(){
-      if(!confirm("確定要清除「已完成」清單嗎？等待製作中的點單不會受影響。")) return;
-      ordersRef.where("status", "==", "done").get().then(function(snap){
+      if(!confirm("確定要清除「已完成」和「已取消」清單嗎？等待製作中的點單不會受影響。")) return;
+      ordersRef.where("status", "in", ["done", "cancelled"]).get().then(function(snap){
         var batch = db.batch();
         snap.docs.forEach(function(d){ batch.delete(d.ref); });
         return batch.commit();
@@ -739,11 +796,12 @@
       var connBanner = !connected ? '<div class="banner readonly">⚠️ 連線中，請稍候…如果一直卡住請檢查網路連線</div>' : "";
 
       var cards = menu.map(function(m){
-        return '<div class="drink-card">'
+        var out = isSoldOut(m.id);
+        return '<div class="drink-card' + (out ? " sold-out" : "") + '">'
           + '<div class="drink-info"><h3>' + esc(m.name) + "</h3>"
           + '<p class="desc">' + esc(m.desc) + "</p></div>"
           + '<div class="drink-actions">'
-          + '<button class="btn drink-order-btn" data-action="order" data-id="' + esc(m.id) + '" data-name="' + esc(m.name) + '" ' + (hasName && connected ? "" : "disabled") + ">點這杯</button>"
+          + '<button class="btn drink-order-btn" data-action="order" data-id="' + esc(m.id) + '" data-name="' + esc(m.name) + '" ' + (hasName && connected && !out ? "" : "disabled") + ">" + (out ? "已完售" : "點這杯") + "</button>"
           + '<select class="vote-select" data-action-change="vote" data-id="' + esc(m.id) + '" data-name="' + esc(m.name) + '" ' + (connected ? "" : "disabled") + '>'
           + '<option value="">評分投票</option>'
           + '<option value="3">★★★ 很喜歡</option>'
@@ -763,7 +821,7 @@
             return '<div class="ticket-row"><span class="ticket-num">#' + ticketNumOf(o.id) + '</span>'
               + '<div class="ticket-main"><div class="name">' + esc(o.drinkName) + '</div>'
               + '<div class="drink">' + timeAgo(o.createdAt) + '</div></div>'
-              + '<span class="pill ' + o.status + '">' + (o.status === "done" ? "已完成" : "製作中") + '</span></div>';
+              + '<span class="pill ' + o.status + '">' + (o.status === "done" ? "已完成" : o.status === "cancelled" ? "已取消" : "製作中") + '</span></div>';
           }).join("")
           + "</details>";
       }
@@ -818,6 +876,8 @@
     function renderHostView(){
       var pending = orders.filter(function(o){ return o.status === "pending"; });
       var done = orders.filter(function(o){ return o.status === "done"; }).slice().reverse();
+      var cancelled = orders.filter(function(o){ return o.status === "cancelled"; }).slice().reverse();
+      var activeCount = pending.length + done.length;
 
       var connDot = '<span class="conn-dot' + (connected?"":" off") + '"></span>' + (connected ? "即時同步中" : "連線中斷");
 
@@ -828,7 +888,7 @@
       var stats = '<div class="stat-row">'
         + '<div class="stat-tile accent"><div class="num">' + pending.length + '</div><div class="lbl">等待製作</div></div>'
         + '<div class="stat-tile"><div class="num">' + done.length + '</div><div class="lbl">已完成</div></div>'
-        + '<div class="stat-tile"><div class="num">' + orders.length + '</div><div class="lbl">今晚總點杯數</div></div>'
+        + '<div class="stat-tile"><div class="num">' + activeCount + '</div><div class="lbl">今晚總點杯數</div></div>'
         + '<div class="stat-tile"><div class="num">' + menu.length + '</div><div class="lbl">酒單款數</div></div>'
         + '<div class="stat-tile"><div class="num">' + ratings.length + '</div><div class="lbl">已收到評分</div></div>'
         + "</div>";
@@ -838,7 +898,7 @@
         + "</div>";
 
       var body = "";
-      if(hostTab === "queue") body = renderQueueTab(pending, done);
+      if(hostTab === "queue") body = renderQueueTab(pending, done, cancelled);
       else if(hostTab === "edit") body = renderEditTab();
       else if(hostTab === "rating") body = renderRatingTab();
       else if(hostTab === "timing") body = renderTimingTab();
@@ -851,28 +911,49 @@
       return '<button class="tab-btn' + (hostTab===key?" active":"") + '" data-action="host-tab" data-tab="' + key + '">' + label + "</button>";
     }
 
-    function renderQueueTab(pending, done){
-      function row(o, isDone){
+    function renderQueueTab(pending, done, cancelled){
+      function row(o, kind){
         var durationHtml = "";
-        if(isDone && o.doneAt){
+        if(kind === "done" && o.doneAt){
           durationHtml = '<span class="qduration">製作時間 ' + formatDuration(o.doneAt - o.createdAt) + '</span>';
         }
-        return '<div class="queue-row' + (isDone?" done":"") + '">'
+        var out = isSoldOut(o.drinkId);
+        var tag = (kind === "pending" && out) ? '<span class="soldout-tag">已完售</span>' : "";
+        var actions;
+        if(kind === "pending"){
+          actions = '<button class="btn btn-sm" data-action="toggle-order" data-id="' + o.id + '">完成 ✓</button>'
+            + '<button class="btn-ghost btn-sm btn-cancel" data-action="cancel-order" data-id="' + o.id + '">取消</button>'
+            + (out ? "" : '<button class="btn-ghost btn-sm" data-action="sold-out" data-drink="' + esc(o.drinkId) + '">完售</button>');
+        } else if(kind === "done"){
+          actions = '<button class="btn btn-sm" data-action="toggle-order" data-id="' + o.id + '">復原</button>';
+        } else {
+          actions = '<button class="btn-ghost btn-sm" data-action="restore-order" data-id="' + o.id + '">復原</button>';
+        }
+        return '<div class="queue-row' + (kind === "pending" ? "" : " " + kind) + '">'
           + '<span class="tnum">#' + ticketNumOf(o.id) + '</span>'
-          + '<div class="qmain"><span class="qname">' + esc(o.guest) + '</span><span class="qdrink">' + esc(o.drinkName) + '</span>'
+          + '<div class="qmain"><span class="qname">' + esc(o.guest) + '</span><span class="qdrink">' + esc(o.drinkName) + '</span>' + tag
           + '<span class="qtime">' + timeAgo(o.createdAt) + '</span>' + durationHtml + '</div>'
-          + '<div class="queue-actions"><button class="btn btn-sm" data-action="toggle-order" data-id="' + o.id + '">' + (isDone ? "復原" : "完成 ✓") + '</button></div>'
+          + '<div class="queue-actions">' + actions + '</div>'
           + "</div>";
       }
-      var pendingHtml = pending.length ? pending.map(function(o){ return row(o,false); }).join("") : '<div class="host-empty">目前沒有等待中的點單</div>';
-      var doneHtml = done.length ? done.map(function(o){ return row(o,true); }).join("") : '<div class="host-empty">還沒有完成的點單</div>';
+      var supply = '<div class="supply-strip"><span class="supply-label">供應狀態（點一下切換完售）</span>'
+        + menu.map(function(m){
+          var out = isSoldOut(m.id);
+          return '<button class="supply-chip' + (out ? " off" : "") + '" data-action="' + (out ? "restock" : "sold-out") + '" data-drink="' + esc(m.id) + '" title="' + (out ? "點一下恢復供應" : "點一下標記完售") + '">' + esc(m.name) + '</button>';
+        }).join("")
+        + "</div>";
+      var pendingHtml = pending.length ? pending.map(function(o){ return row(o,"pending"); }).join("") : '<div class="host-empty">目前沒有等待中的點單</div>';
+      var doneHtml = done.length ? done.map(function(o){ return row(o,"done"); }).join("") : '<div class="host-empty">還沒有完成的點單</div>';
+      var cancelledHtml = cancelled.length
+        ? '<h2 style="margin-top:8px;">已取消 · ' + cancelled.length + '</h2><div class="queue-list">' + cancelled.map(function(o){ return row(o,"cancelled"); }).join("") + "</div>"
+        : "";
       var doneHeader = '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">'
         + '<h2 style="margin-bottom:0;">已完成 · ' + done.length + '</h2>'
         + '<button class="btn-ghost btn-sm" data-action="clear-done-orders"' + (done.length ? "" : " disabled") + '>清除出杯看板</button>'
         + "</div>";
-      return '<div class="queue-columns">'
+      return supply + '<div class="queue-columns">'
         + '<div class="queue-section"><h2>等待製作 · ' + pending.length + '</h2><div class="queue-list">' + pendingHtml + "</div></div>"
-        + '<div class="queue-section">' + doneHeader + '<div class="queue-list">' + doneHtml + "</div></div>"
+        + '<div class="queue-section">' + doneHeader + '<div class="queue-list">' + doneHtml + "</div>" + cancelledHtml + "</div>"
         + "</div>";
     }
 
@@ -1119,6 +1200,18 @@
           break;
         case "toggle-order":
           toggleOrder(t.getAttribute("data-id"));
+          break;
+        case "cancel-order":
+          cancelOrder(t.getAttribute("data-id"));
+          break;
+        case "restore-order":
+          restoreOrder(t.getAttribute("data-id"));
+          break;
+        case "sold-out":
+          setSoldOut(t.getAttribute("data-drink"), true);
+          break;
+        case "restock":
+          setSoldOut(t.getAttribute("data-drink"), false);
           break;
       }
     });
